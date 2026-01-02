@@ -7,6 +7,7 @@ let currentRoom = null;
 let timerInterval;
 let myPlayerId = null; 
 let toastTimeout;
+let serverPackStructure = {}; // Храним структуру паков
 
 const screens = {
     login: document.getElementById('screen-login'),
@@ -15,7 +16,6 @@ const screens = {
     results: document.getElementById('screen-results')
 };
 
-// --- INIT & RECONNECT ---
 window.addEventListener('load', () => {
     const savedRoom = localStorage.getItem('spy_room');
     if (savedRoom) {
@@ -50,15 +50,11 @@ function showConfirm(title, message, onYes) {
     popup.classList.add('active');
 }
 
-function closeConfirmPopup() {
-    document.getElementById('confirm-popup').classList.remove('active');
-}
+function closeConfirmPopup() { document.getElementById('confirm-popup').classList.remove('active'); }
 
-// --- NAVIGATION ---
 function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
-    // Сброс скролла в начало при переходе
     screens[name].scrollTop = 0;
 }
 
@@ -97,29 +93,13 @@ function getUid() {
 // --- CONTROLS ---
 function changeSetting(key, delta) {
     if (!isHost) return;
-    
     const el = document.getElementById(`val-${key}`);
-    let val = parseInt(el.innerText);
-    
-    // 1. Вычисляем новое значение локально
-    let newVal = val + delta;
-    
-    // 2. Проверяем лимиты локально (чтобы цифры не скакали)
-    if (newVal < 1) newVal = 1;
-    if (key === 'spies') {
-        if (newVal > 3) newVal = 3; // Максимум 3 шпиона
-        // Нельзя сделать шпионов больше, чем игроков (примерная проверка)
-        // Точную проверку сделает сервер, но для UI ограничим пока так
-    }
-    if (key === 'time') {
-        if (newVal > 15) newVal = 15; // Максимум 15 минут
-    }
-
-    // 3. МГНОВЕННО обновляем интерфейс (Оптимистичный UI)
-    el.innerText = newVal; 
-    
-    // 4. Отправляем на сервер "в фоне"
-    socket.emit('updateSettings', { roomCode: currentRoom, key, value: newVal });
+    let val = parseInt(el.innerText) + delta;
+    if (val < 1) val = 1;
+    if (key === 'spies' && val > 3) val = 3;
+    if (key === 'time' && val > 15) val = 15;
+    el.innerText = val; // Optimistic
+    socket.emit('updateSettings', { roomCode: currentRoom, key, value: val });
 }
 
 function toggleLocationFilter(loc) {
@@ -127,51 +107,34 @@ function toggleLocationFilter(loc) {
     socket.emit('toggleLocation', { roomCode: currentRoom, location: loc });
 }
 
-function startGame() {
-    if (isHost) socket.emit('startGame', currentRoom);
+function togglePackFilter(packName, isChecked) {
+    if (!isHost) return;
+    socket.emit('togglePack', { roomCode: currentRoom, packName, enable: isChecked });
 }
 
-function restartGameReq() {
-    if (isHost) {
-        showConfirm('Завершение', 'Вернуть всех в лобби?', () => {
-            socket.emit('returnToLobby', currentRoom);
-        });
-    }
-}
+function startGame() { if (isHost) socket.emit('startGame', currentRoom); }
+function restartGameReq() { if (isHost) showConfirm('Завершение', 'Вернуть всех в лобби?', () => socket.emit('returnToLobby', currentRoom)); }
 
-function openSpyGuess() {
-    document.getElementById('spy-guess-sheet').classList.add('active');
-    document.getElementById('modal-backdrop').classList.add('active');
-}
-function submitSpyGuess(loc) {
-    showConfirm('Угадать', `Ваш выбор: ${loc}?`, () => {
-        socket.emit('spyGuess', { roomCode: currentRoom, location: loc });
-        closeSheets();
-    });
-}
-function openVoteMenu() {
-    document.getElementById('vote-menu-sheet').classList.add('active');
-    document.getElementById('modal-backdrop').classList.add('active');
-}
-function startVote(targetId) {
-    closeSheets();
-    socket.emit('startVote', { roomCode: currentRoom, targetId });
-}
-function sendVote(decision) {
-    document.getElementById('vote-popup').classList.remove('active');
-    socket.emit('submitVote', { roomCode: currentRoom, vote: decision });
-}
+// --- GAME ACTIONS ---
+function openSpyGuess() { document.getElementById('spy-guess-sheet').classList.add('active'); document.getElementById('modal-backdrop').classList.add('active'); }
+function submitSpyGuess(loc) { showConfirm('Угадать', `Ваш выбор: ${loc}?`, () => { socket.emit('spyGuess', { roomCode: currentRoom, location: loc }); closeSheets(); }); }
+function openVoteMenu() { document.getElementById('vote-menu-sheet').classList.add('active'); document.getElementById('modal-backdrop').classList.add('active'); }
+function startVote(targetId) { closeSheets(); socket.emit('startVote', { roomCode: currentRoom, targetId }); }
+function sendVote(decision) { document.getElementById('vote-popup').classList.remove('active'); socket.emit('submitVote', { roomCode: currentRoom, vote: decision }); }
 
-// --- EVENTS ---
+// --- SOCKET EVENTS ---
 socket.on('joined', (data) => {
     isHost = data.isHost;
     currentRoom = data.roomCode;
     myPlayerId = socket.id;
+    serverPackStructure = data.packStructure || {}; // Сохраняем структуру паков
     localStorage.setItem('spy_room', currentRoom);
+    
     document.getElementById('display-code').innerText = data.roomCode;
     updateRoleControls();
     updateSettingsUI(data.settings);
-    renderFilterList(data.allLocations, data.settings.activeLocations);
+    // Рендерим фильтр при входе
+    renderFilterList(serverPackStructure, data.settings.activeLocations); 
     showScreen('lobby');
 });
 
@@ -187,8 +150,8 @@ socket.on('updatePlayers', (players) => {
 
 socket.on('settingsChanged', (settings) => {
     updateSettingsUI(settings);
-    const inputs = document.querySelectorAll('#filter-list input');
-    inputs.forEach(input => { input.checked = settings.activeLocations.includes(input.value); });
+    // Перерисовываем весь список, чтобы обновить состояния паков и локаций
+    renderFilterList(serverPackStructure, settings.activeLocations);
 });
 
 socket.on('gameStarted', (data) => {
@@ -234,20 +197,10 @@ socket.on('gameOver', (data) => {
     updateRoleControls();
 });
 
-socket.on('returnToLobby', () => {
-    clearInterval(timerInterval);
-    showScreen('lobby');
-});
+socket.on('returnToLobby', () => { clearInterval(timerInterval); showScreen('lobby'); });
+socket.on('error', (msg) => { showToast(msg, 'error'); if (msg.includes('закрыта') || msg.includes('не найдена')) { localStorage.removeItem('spy_room'); showScreen('login'); } });
 
-socket.on('error', (msg) => {
-    showToast(msg, 'error');
-    if (msg.includes('закрыта') || msg.includes('не найдена')) {
-        localStorage.removeItem('spy_room');
-        showScreen('login');
-    }
-});
-
-// --- RENDER HELPERS ---
+// --- RENDERERS ---
 function updateSettingsUI(settings) {
     document.getElementById('val-time').innerText = settings.time;
     document.getElementById('val-spies').innerText = settings.spies;
@@ -263,11 +216,73 @@ function updateRoleControls() {
     guestControls.forEach(el => el.classList.toggle('hidden', isHost));
 }
 
-function renderFilterList(allLocs, activeLocs) {
+// --- ФУНКЦИЯ РАСКРЫТИЯ АККОРДЕОНА ---
+function togglePackDetails(packName) {
+    const content = document.getElementById(`pack-content-${packName}`);
+    const arrow = document.getElementById(`pack-arrow-${packName}`);
+    
+    // Проверяем текущее состояние (если пусто или none - значит скрыто)
+    const isHidden = !content.style.display || content.style.display === 'none';
+    
+    if (isHidden) {
+        content.style.display = 'block';
+        arrow.style.transform = 'rotate(90deg)';
+    } else {
+        content.style.display = 'none';
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+// --- ОБНОВЛЕННЫЙ РЕНДЕР ФИЛЬТРОВ ---
+function renderFilterList(packs, activeLocs) {
     const list = document.getElementById('filter-list');
-    list.innerHTML = allLocs.map(loc => `
-        <li><span>${loc}</span><label class="ios-switch"><input type="checkbox" value="${loc}" ${activeLocs.includes(loc) ? 'checked' : ''} ${!isHost ? 'disabled' : ''} onchange="toggleLocationFilter('${loc}')"><span class="slider"></span></label></li>
-    `).join('');
+    list.innerHTML = ''; // Очищаем
+
+    for (const [packName, locations] of Object.entries(packs)) {
+        // Проверяем, включен ли ВЕСЬ пак
+        const isPackFullyActive = locations.every(loc => activeLocs.includes(loc));
+        
+        // 1. Заголовок пака (теперь с onclick на тексте)
+        // Обратите внимание: onclick вешаем на span wrapper, чтобы клик по свитчу не раскрывал список
+        const packHtml = `
+            <li class="pack-header">
+                <div class="pack-title-area" onclick="togglePackDetails('${packName}')">
+                    <i id="pack-arrow-${packName}" class="ph-bold ph-caret-right" style="transition: transform 0.2s; margin-right: 8px;"></i>
+                    <span>📦 ${packName}</span>
+                </div>
+                <label class="ios-switch">
+                    <input type="checkbox" 
+                        ${isPackFullyActive ? 'checked' : ''} 
+                        ${!isHost ? 'disabled' : ''} 
+                        onchange="togglePackFilter('${packName}', this.checked)">
+                    <span class="slider"></span>
+                </label>
+            </li>
+        `;
+        list.insertAdjacentHTML('beforeend', packHtml);
+
+        // 2. Контейнер для локаций (изначально скрыт style="display: none")
+        let itemsHtml = `<div id="pack-content-${packName}" style="display: none;">`;
+        
+        locations.forEach(loc => {
+            const isActive = activeLocs.includes(loc);
+            itemsHtml += `
+                <li class="sub-item">
+                    <span>${loc}</span>
+                    <label class="ios-switch">
+                        <input type="checkbox" value="${loc}" 
+                            ${isActive ? 'checked' : ''} 
+                            ${!isHost ? 'disabled' : ''} 
+                            onchange="toggleLocationFilter('${loc}')">
+                        <span class="slider"></span>
+                    </label>
+                </li>
+            `;
+        });
+        
+        itemsHtml += `</div>`;
+        list.insertAdjacentHTML('beforeend', itemsHtml);
+    }
 }
 
 function renderGameCheckList(locations) {
@@ -284,7 +299,6 @@ function renderVoteList(players) {
     const list = document.getElementById('vote-list');
     list.innerHTML = players.map(p => {
         if (p.id === socket.id) return '';
-        // Используем переданный avatarColor
         return `<li onclick="startVote('${p.id}')">
             <div style="display:flex; align-items:center; gap:10px">
                 <div class="avatar" style="background: ${p.avatarColor}">${p.name[0]}</div> ${p.name}

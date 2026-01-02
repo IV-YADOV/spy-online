@@ -256,7 +256,7 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 
 .sheet-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;}
 .close-btn { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
-.sheet-content { padding: 0 20px 20px; overflow-y: auto; flex-grow: 1; }
+.sheet-content { padding: 0 0px 0 px 20px; overflow-y: auto; flex-grow: 1; }
 
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 101; backdrop-filter: blur(5px); }
 .modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
@@ -273,7 +273,17 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 .check-circle { width: 24px; height: 24px; border: 2px solid #ddd; border-radius: 50%; }
 .check-list li.done .check-circle { background: var(--primary); border-color: var(--primary); }
 
-.ios-switch { position: relative; display: inline-block; width: 50px; height: 30px; }
+.ios-switch { 
+    position: relative; 
+    display: inline-block; 
+    width: 50px; 
+    height: 30px; 
+    
+    /* --- ДОБАВЛЕННЫЕ ОТСТУПЫ --- */
+    flex-shrink: 0;       /* Запрещаем свитчу сжиматься, если текст длинный */
+    margin-left: 15px;    /* Отступ от текста слева */
+    margin-right: 10px;   /* Дополнительный отступ от правого края */
+}
 .ios-switch input { opacity: 0; width: 0; height: 0; }
 .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e4e4e4; transition: .4s; border-radius: 34px; }
 .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
@@ -309,4 +319,51 @@ input:checked + .slider:before { transform: translateX(20px); }
     
     /* Учитываем отступ на iPhone без кнопки */
     padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ... (весь код, что был ранее) ... */
+
+/* --- СТИЛИ ДЛЯ СПИСКА ПАКОВ (АККОРДЕОН) --- */
+.pack-header {
+    background: #f7f9fc;
+    /* Убираем padding сверху/снизу тут, чтобы flex работал корректно */
+    padding: 0 10px 0 0; 
+    border-bottom: 1px solid #eee;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    min-height: 50px; /* Высота строки пака */
+}
+
+/* Область с названием и стрелкой - кликабельная */
+.pack-title-area {
+    display: flex;
+    align-items: center;
+    flex-grow: 1;
+    height: 50px;
+    padding-left: 15px;
+    cursor: pointer;
+    font-weight: 800;
+    color: var(--text-main);
+    /* Запрещаем выделение текста при кликах */
+    user-select: none; 
+    -webkit-user-select: none; 
+}
+
+/* Локации внутри пака */
+.sub-item {
+    background: #fff;
+    padding: 12px 15px 12px 40px !important; /* Большой отступ слева */
+    border-bottom: 1px solid #f5f5f5;
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    font-size: 0.95rem;
+    animation: slideDown 0.2s ease-out;
+}
+
+/* Небольшая анимация появления */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }
