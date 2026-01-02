@@ -20,37 +20,18 @@ body {
 
 /* --- TOAST NOTIFICATIONS --- */
 .toast {
-    position: fixed;
-    top: 20px;
-    left: 50%;
+    position: fixed; top: 20px; left: 50%;
     transform: translateX(-50%) translateY(-20px);
     background: rgba(0, 0, 0, 0.75);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 30px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    opacity: 0;
-    pointer-events: none;
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    color: white; padding: 12px 24px; border-radius: 30px;
+    font-weight: 600; font-size: 0.95rem; opacity: 0; pointer-events: none;
     transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    z-index: 9999;
-    white-space: nowrap;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+    z-index: 9999; white-space: nowrap; box-shadow: 0 5px 20px rgba(0,0,0,0.2);
 }
-
-.toast.active {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-}
-
-.toast.error {
-    background: rgba(255, 59, 48, 0.85); /* Red for errors */
-}
-.toast.success {
-    background: rgba(52, 199, 89, 0.85); /* Green for success */
-}
+.toast.active { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast.error { background: rgba(255, 59, 48, 0.85); }
+.toast.success { background: rgba(52, 199, 89, 0.85); }
 
 /* --- ФОН --- */
 .mesh-background {
@@ -89,12 +70,10 @@ body {
 .screen {
     display: none; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box;
     animation: fadeScale 0.3s ease;
-    overflow-y: auto; 
-    scrollbar-width: none; 
+    overflow-y: auto; scrollbar-width: none; 
 }
 .screen::-webkit-scrollbar { display: none; }
 .screen.active { display: flex; }
-
 @keyframes fadeScale { from{opacity:0; transform:scale(0.98);} to{opacity:1; transform:scale(1);} }
 
 /* Элементы UI */
@@ -127,7 +106,7 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
     flex-shrink: 0;
 }
 .join-row { display: flex; gap: 10px; margin-top: 15px; margin-bottom: auto; flex-shrink: 0;}
-.small-input { margin: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
+.small-input { padding-left: 0px; padding-right: 0px; margin: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
 
 /* Лобби */
 .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
@@ -140,7 +119,10 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
     background: rgba(255,255,255,0.8); padding: 10px; border-radius: 14px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem;
     box-shadow: 0 2px 8px rgba(0,0,0,0.03);
 }
-.avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; }
+.avatar { 
+    width: 32px; height: 32px; border-radius: 50%; 
+    display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; 
+}
 .chip-host { border: 2px solid var(--primary); }
 
 /* Настройки */
@@ -158,21 +140,12 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 .timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 1.4rem; }
 
 .card-area { 
-    flex-grow: 1; 
-    perspective: 1000px; 
-    display: flex; 
-    justify-content: center; 
-    align-items: center; 
-    min-height: 280px;
-    padding: 10px 0;
+    flex-grow: 1; perspective: 1000px; display: flex; justify-content: center; align-items: center; 
+    min-height: 280px; padding: 10px 0;
 }
 .game-card { 
-    width: 260px; 
-    height: 300px; 
-    position: relative; 
-    transform-style: preserve-3d; 
-    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); 
-    cursor: pointer; 
+    width: 260px; height: 300px; position: relative; transform-style: preserve-3d; 
+    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); cursor: pointer; 
 }
 .game-card.flipped { transform: rotateY(180deg); }
 .card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 30px; background: white; box-shadow: 0 20px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
@@ -182,52 +155,24 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 .location-badge { background: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 12px; font-weight: 700; margin: 10px 0; display: inline-flex; align-items: center; gap: 6px;}
 .is-spy .location-badge { background: var(--accent-light); color: var(--accent); }
 
-/* Действия и Меню */
-.game-actions { 
-    display: flex; 
-    gap: 10px; 
-    margin: 5px 0 10px; 
-    flex-shrink: 0;
-}
+.game-actions { display: flex; gap: 10px; margin: 5px 0 10px; flex-shrink: 0; }
 .action-btn { 
-    flex: 1; 
-    padding: 15px; 
-    border-radius: 18px; 
-    border: none; 
-    background: white; 
-    font-weight: 700; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-    cursor: pointer; 
-    display: flex; 
-    justify-content: center; 
-    gap: 8px; 
-    align-items: center; 
-    font-size: 1rem;
-    color: var(--text-main);
+    flex: 1; padding: 15px; border-radius: 18px; border: none; background: white; 
+    font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.05); cursor: pointer; 
+    display: flex; justify-content: center; gap: 8px; align-items: center; 
+    font-size: 1rem; color: var(--text-main);
 }
 .action-btn:active { transform: scale(0.97); }
 
 .menu-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 15px; 
-    margin-top: auto; 
-    flex-shrink: 0; 
-    padding-bottom: 5px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: auto; 
+    flex-shrink: 0; padding-bottom: 5px;
 }
 .menu-item { 
-    background: white; 
-    padding: 15px; 
-    border-radius: 20px; 
-    display: flex; 
-    flex-direction: column; 
-    align-items: center; 
-    gap: 8px; 
-    box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
-    cursor: pointer; 
-    font-weight: 600; 
-    font-size: 0.85rem; 
-    flex-shrink: 0;
+    background: white; padding: 15px; border-radius: 20px; 
+    display: flex; flex-direction: column; align-items: center; gap: 8px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05); cursor: pointer; font-weight: 600; 
+    font-size: 0.85rem; flex-shrink: 0;
 }
 .menu-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
 .icon-bg-blue { background: var(--primary-light); color: var(--primary); }
@@ -239,9 +184,29 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 .result-box { text-align: left; }
 .res-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 1.1rem; }
 
-/* Шторки */
-.bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; background: #fff; border-radius: 30px 30px 0 0; transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 100; display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
-.bottom-sheet.active { transform: translateY(0); }
+/* Шторки (ИСПРАВЛЕНО) */
+.bottom-sheet { 
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; 
+    background: #fff; border-radius: 30px 30px 0 0; 
+    transform: translateY(110%); 
+    /* ВАЖНО: Скрываем элемент полностью, когда он не активен */
+    visibility: hidden; 
+    pointer-events: none;
+    z-index: 100; 
+    display: flex; flex-direction: column; 
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.1); 
+    /* Анимация: сначала трансформ, потом видимость с задержкой при закрытии */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.3s;
+}
+
+.bottom-sheet.active { 
+    transform: translateY(0); 
+    visibility: visible;
+    pointer-events: auto;
+    /* При открытии видимость включается сразу */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0s;
+}
+
 .sheet-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;}
 .close-btn { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
 .sheet-content { padding: 0 20px 20px; overflow-y: auto; flex-grow: 1; }
