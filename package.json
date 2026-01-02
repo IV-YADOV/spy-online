@@ -1,0 +1,9 @@
+{
+  "name": "spy-premium-online",
+  "version": "2.0.0",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2"
+  }
+}

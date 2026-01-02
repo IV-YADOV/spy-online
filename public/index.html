@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Шпион Онлайн</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body>
+
+    <div class="mesh-background"></div>
+    
+    <div id="toast-notification" class="toast"></div>
+
+    <div class="app-wrapper">
+        <div class="app-container">
+            
+            <div id="screen-login" class="screen active">
+                <div class="header-large center-text">
+                    <h1>Шпион</h1>
+                    <p class="subtitle">Онлайн</p>
+                </div>
+                <div class="glass-panel">
+                    <div class="input-group">
+                        <i class="ph-bold ph-user"></i>
+                        <input type="text" id="username" placeholder="Ваше имя" maxlength="12">
+                    </div>
+                </div>
+                <button class="main-btn" onclick="createGame()">
+                    Создать игру <i class="ph-bold ph-plus-circle"></i>
+                </button>
+                <div class="join-row">
+                    <div class="glass-panel small-input">
+                        <input type="text" id="room-code-input" placeholder="CODE" style="text-transform:uppercase; text-align:center;">
+                    </div>
+                    <button class="secondary-btn" onclick="joinGame()">
+                        Войти <i class="ph-bold ph-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="screen-lobby" class="screen">
+                <div class="top-bar">
+                    <button class="icon-btn" onclick="exitGame()"><i class="ph-bold ph-caret-left"></i> Выход</button>
+                    <div class="room-tag">Комната: <span id="display-code">...</span></div>
+                </div>
+
+                <div class="section-title">Игроки</div>
+                <div class="players-grid" id="players-list"></div>
+
+                <div class="section-title">Настройки</div>
+                <div class="glass-panel settings-box">
+                    <div class="control-row">
+                        <div class="label-box"><i class="ph-fill ph-sunglasses icon-red"></i> Шпионов</div>
+                        <div class="value-control host-only-control">
+                            <button onclick="changeSetting('spies', -1)">-</button>
+                            <span id="val-spies">1</span>
+                            <button onclick="changeSetting('spies', 1)">+</button>
+                        </div>
+                        <div class="value-display guest-only-control"><span id="guest-spies">1</span></div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="control-row">
+                        <div class="label-box"><i class="ph-fill ph-hourglass-high icon-blue"></i> Минуты</div>
+                        <div class="value-control host-only-control">
+                            <button onclick="changeSetting('time', -1)">-</button>
+                            <span id="val-time">5</span>
+                            <button onclick="changeSetting('time', 1)">+</button>
+                        </div>
+                        <div class="value-display guest-only-control"><span id="guest-time">5</span> мин</div>
+                    </div>
+                    <div class="divider"></div>
+                    <div class="control-row" onclick="openFilterModal()" style="cursor: pointer;">
+                        <div class="label-box"><i class="ph-fill ph-faders"></i> Локации</div>
+                        <div style="display:flex; align-items:center; gap:5px; color:var(--text-muted); font-size:0.9rem;">
+                            <span id="active-loc-count">20</span> в игре <i class="ph-bold ph-caret-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="lobby-status" class="status-text guest-only-control">Ожидание организатора...</div>
+                <button id="start-btn" class="main-btn floating-btn host-only-control" onclick="startGame()">
+                    Начать игру <i class="ph-bold ph-play"></i>
+                </button>
+            </div>
+
+            <div id="screen-game" class="screen">
+                <div class="timer-container">
+                    <svg class="progress-ring" width="120" height="120">
+                        <circle class="progress-ring__circle" stroke="currentColor" stroke-width="6" fill="transparent" r="54" cx="60" cy="60"/>
+                    </svg>
+                    <div class="timer-text" id="timer-display">05:00</div>
+                </div>
+
+                <div class="card-area" onclick="flipCard()">
+                    <div class="game-card" id="game-card">
+                        <div class="card-face front">
+                            <div class="pattern-circle"><i class="ph-duotone ph-fingerprint"></i></div>
+                            <p>Нажмите,<br>чтобы узнать роль</p>
+                        </div>
+                        <div class="card-face back">
+                            <div class="role-content">
+                                <h2 id="role-text">Роль</h2>
+                                <div class="location-badge">
+                                    <i class="ph-fill ph-map-pin"></i> <span id="location-text">Локация</span>
+                                </div>
+                                <p class="role-desc" id="role-desc">...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="game-actions">
+                    <button id="spy-guess-btn" class="action-btn hidden" onclick="openSpyGuess()">
+                        <i class="ph-bold ph-crosshair"></i> Угадать
+                    </button>
+                    <button class="action-btn" onclick="openVoteMenu()">
+                        <i class="ph-bold ph-gavel"></i> Кикнуть
+                    </button>
+                </div>
+
+                <div class="menu-grid">
+                    <div class="menu-item" onclick="openGameList()">
+                        <span class="menu-icon icon-bg-blue"><i class="ph-fill ph-list-dashes"></i></span>
+                        <span>Список</span>
+                    </div>
+                    <div class="menu-item host-only-control" onclick="restartGameReq()">
+                        <span class="menu-icon icon-bg-red"><i class="ph-fill ph-stop"></i></span>
+                        <span>Завершить</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-results" class="screen">
+                <div style="flex:1; display:flex; flex-direction:column; justify-content:center; text-align:center;">
+                    <div id="res-icon" class="result-icon">🏆</div>
+                    <h1 id="res-title">Победа!</h1>
+                    <p id="res-reason" class="result-reason">Причина победы</p>
+                    
+                    <div class="glass-panel result-box">
+                        <div class="res-row">
+                            <span>Локация:</span>
+                            <b id="res-loc">Пляж</b>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="res-row">
+                            <span>Шпион:</span>
+                            <b id="res-spy" style="color:var(--accent)">Имя</b>
+                        </div>
+                    </div>
+                </div>
+                <button class="main-btn host-only-control" onclick="restartGameReq()">В лобби</button>
+                <p class="status-text guest-only-control">Ждем хоста...</p>
+            </div>
+
+            <div id="filter-sheet" class="bottom-sheet">
+                <div class="sheet-header">
+                    <h3>Фильтр локаций</h3>
+                    <button class="close-btn" onclick="closeSheets()"><i class="ph-bold ph-x"></i></button>
+                </div>
+                <div class="sheet-content">
+                    <ul id="filter-list" class="toggle-list"></ul>
+                </div>
+            </div>
+
+            <div id="game-list-sheet" class="bottom-sheet">
+                <div class="sheet-header">
+                    <h3>Возможные места</h3>
+                    <button class="close-btn" onclick="closeSheets()"><i class="ph-bold ph-x"></i></button>
+                </div>
+                <div class="sheet-content">
+                    <ul id="game-check-list" class="check-list"></ul>
+                </div>
+            </div>
+
+            <div id="vote-menu-sheet" class="bottom-sheet">
+                <div class="sheet-header">
+                    <h3>Кого выгнать?</h3>
+                    <button class="close-btn" onclick="closeSheets()"><i class="ph-bold ph-x"></i></button>
+                </div>
+                <div class="sheet-content">
+                    <p class="hint-text">Если все проголосуют ЗА — игрок выбывает и вскрывает роль.</p>
+                    <ul id="vote-list" class="simple-list"></ul>
+                </div>
+            </div>
+
+            <div id="spy-guess-sheet" class="bottom-sheet">
+                <div class="sheet-header">
+                    <h3>Где мы?</h3>
+                    <button class="close-btn" onclick="closeSheets()"><i class="ph-bold ph-x"></i></button>
+                </div>
+                <div class="sheet-content">
+                    <p class="hint-text">Ошибка приведет к поражению!</p>
+                    <ul id="spy-guess-list" class="simple-list"></ul>
+                </div>
+            </div>
+
+            <div id="vote-popup" class="modal-overlay">
+                <div class="modal-box">
+                    <h3>Голосование!</h3>
+                    <p>Выгнать игрока <b id="vote-target-name">Имя</b>?</p>
+                    <div class="modal-actions">
+                        <button class="main-btn" onclick="sendVote(true)" style="background:var(--accent)">Да (Кикнуть)</button>
+                        <button class="secondary-btn" onclick="sendVote(false)">Нет</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="confirm-popup" class="modal-overlay">
+                <div class="modal-box">
+                    <h3 id="confirm-title">Внимание</h3>
+                    <p id="confirm-text">Вы уверены?</p>
+                    <div class="modal-actions">
+                        <button id="confirm-yes-btn" class="main-btn" style="background:var(--accent)">Да</button>
+                        <button class="secondary-btn" onclick="closeConfirmPopup()">Нет</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="modal-backdrop" class="backdrop" onclick="closeSheets()"></div>
+
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,275 @@
+:root {
+    --bg-color: #f7f8fc;
+    --card-bg: rgba(255, 255, 255, 0.65);
+    --text-main: #1c1c1e;
+    --text-muted: #8e8e93;
+    --primary: #4e5ae6;
+    --primary-light: #eef0ff;
+    --accent: #ff6b6b;
+    --accent-light: #fff0f0;
+    --shadow: 0 10px 40px rgba(78, 90, 230, 0.08);
+    --font-main: 'Manrope', -apple-system, sans-serif;
+}
+
+body {
+    margin: 0; font-family: var(--font-main);
+    background: var(--bg-color); color: var(--text-main);
+    height: 100vh; overflow: hidden;
+    display: flex; justify-content: center;
+}
+
+/* --- TOAST NOTIFICATIONS --- */
+.toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.95rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 9999;
+    white-space: nowrap;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+}
+
+.toast.active {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast.error {
+    background: rgba(255, 59, 48, 0.85); /* Red for errors */
+}
+.toast.success {
+    background: rgba(52, 199, 89, 0.85); /* Green for success */
+}
+
+/* --- ФОН --- */
+.mesh-background {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;
+    background-color: var(--bg-color);
+    background-image: 
+        radial-gradient(at 80% 0%, hsla(189,100%,90%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, hsla(260,100%,92%,1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, hsla(340,100%,90%,1) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, hsla(22,100%,92%,1) 0px, transparent 50%);
+    filter: blur(40px);
+}
+
+/* --- ПК Версия --- */
+.app-wrapper {
+    width: 100%; height: 100%;
+    display: flex; justify-content: center; align-items: flex-end;
+}
+@media (min-width: 768px) {
+    .app-wrapper { align-items: center; background: none; }
+    .app-container {
+        width: 400px !important; height: 800px !important; max-height: 90vh;
+        border-radius: 40px; background: rgba(255, 255, 255, 0.4) !important;
+        backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+        box-shadow: 0 40px 80px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.4);
+        overflow: hidden;
+    }
+}
+@media (max-width: 767px) {
+    .app-container { width: 100%; height: 100%; background: transparent; }
+}
+
+.app-container { position: relative; display: flex; flex-direction: column; }
+
+/* Экраны */
+.screen {
+    display: none; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box;
+    animation: fadeScale 0.3s ease;
+    overflow-y: auto; 
+    scrollbar-width: none; 
+}
+.screen::-webkit-scrollbar { display: none; }
+.screen.active { display: flex; }
+
+@keyframes fadeScale { from{opacity:0; transform:scale(0.98);} to{opacity:1; transform:scale(1);} }
+
+/* Элементы UI */
+h1 { margin: 0; font-size: 2.2rem; letter-spacing: -1px; color: var(--text-main); }
+.subtitle { color: var(--text-muted); margin-top: 5px; font-weight: 600; }
+.center-text { text-align: center; margin-bottom: 30px; margin-top: auto; flex-shrink: 0; }
+
+.glass-panel {
+    background: var(--card-bg); border-radius: 20px; padding: 16px;
+    box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.5);
+    margin-bottom: 15px; backdrop-filter: blur(10px); flex-shrink: 0;
+}
+
+.input-group { display: flex; align-items: center; gap: 12px; }
+.input-group i { font-size: 1.4rem; color: var(--text-muted); }
+input { border: none; background: transparent; font-size: 1.1rem; width: 100%; outline: none; font-weight: 600; font-family: inherit; color: var(--text-main); }
+
+.main-btn {
+    background: var(--text-main); color: #fff; border: none; width: 70%;
+    padding: 18px; border-radius: 18px; font-size: 1.1rem; font-weight: 700;
+    cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: transform 0.1s;
+    flex-shrink: 0;
+}
+.main-btn:active { transform: scale(0.96); }
+
+.secondary-btn {
+    background: white; color: var(--primary); border: none; padding: 0 24px;
+    border-radius: 18px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    flex-shrink: 0;
+}
+.join-row { display: flex; gap: 10px; margin-top: 15px; margin-bottom: auto; flex-shrink: 0;}
+.small-input { margin: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
+
+/* Лобби */
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
+.icon-btn { background: none; border: none; font-size: 1rem; color: var(--text-main); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.room-tag { background: rgba(255,255,255,0.4); padding: 6px 14px; border-radius: 20px; font-weight: 700; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.2); }
+.section-title { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin: 15px 0 10px; font-weight: 700; flex-shrink: 0; }
+
+.players-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; flex-shrink: 0; }
+.player-chip {
+    background: rgba(255,255,255,0.8); padding: 10px; border-radius: 14px; display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.8rem; }
+.chip-host { border: 2px solid var(--primary); }
+
+/* Настройки */
+.settings-box { flex-shrink: 0; }
+.control-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
+.label-box { display: flex; align-items: center; gap: 10px; font-weight: 600; }
+.value-control { display: flex; gap: 10px; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 12px; }
+.value-control button { width: 32px; height: 32px; border: none; background: white; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.value-control span { width: 24px; text-align: center; line-height: 32px; font-weight: 700; }
+.divider { height: 1px; background: rgba(0,0,0,0.05); width: 100%; margin: 5px 0; }
+
+/* Игра */
+.timer-container { display: flex; justify-content: center; position: relative; margin-top: 10px; flex-shrink: 0; }
+.progress-ring__circle { transition: 1s linear stroke-dashoffset; stroke: var(--text-main); transform: rotate(-90deg); transform-origin: 50% 50%; stroke-dasharray: 339; stroke-dashoffset: 0; }
+.timer-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-weight: 800; font-size: 1.4rem; }
+
+.card-area { 
+    flex-grow: 1; 
+    perspective: 1000px; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    min-height: 280px;
+    padding: 10px 0;
+}
+.game-card { 
+    width: 260px; 
+    height: 300px; 
+    position: relative; 
+    transform-style: preserve-3d; 
+    transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1); 
+    cursor: pointer; 
+}
+.game-card.flipped { transform: rotateY(180deg); }
+.card-face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 30px; background: white; box-shadow: 0 20px 60px rgba(0,0,0,0.15); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; box-sizing: border-box; }
+.front { background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); }
+.back { transform: rotateY(180deg); }
+.pattern-circle { width: 70px; height: 70px; background: var(--primary-light); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: var(--primary); margin-bottom: 20px; }
+.location-badge { background: var(--primary-light); color: var(--primary); padding: 8px 16px; border-radius: 12px; font-weight: 700; margin: 10px 0; display: inline-flex; align-items: center; gap: 6px;}
+.is-spy .location-badge { background: var(--accent-light); color: var(--accent); }
+
+/* Действия и Меню */
+.game-actions { 
+    display: flex; 
+    gap: 10px; 
+    margin: 5px 0 10px; 
+    flex-shrink: 0;
+}
+.action-btn { 
+    flex: 1; 
+    padding: 15px; 
+    border-radius: 18px; 
+    border: none; 
+    background: white; 
+    font-weight: 700; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: center; 
+    gap: 8px; 
+    align-items: center; 
+    font-size: 1rem;
+    color: var(--text-main);
+}
+.action-btn:active { transform: scale(0.97); }
+
+.menu-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 15px; 
+    margin-top: auto; 
+    flex-shrink: 0; 
+    padding-bottom: 5px;
+}
+.menu-item { 
+    background: white; 
+    padding: 15px; 
+    border-radius: 20px; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    gap: 8px; 
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05); 
+    cursor: pointer; 
+    font-weight: 600; 
+    font-size: 0.85rem; 
+    flex-shrink: 0;
+}
+.menu-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.icon-bg-blue { background: var(--primary-light); color: var(--primary); }
+.icon-bg-red { background: var(--accent-light); color: var(--accent); }
+
+/* Итоги */
+.result-icon { font-size: 4rem; margin-bottom: 10px; }
+.result-reason { color: var(--text-muted); margin-bottom: 30px; }
+.result-box { text-align: left; }
+.res-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 1.1rem; }
+
+/* Шторки */
+.bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; background: #fff; border-radius: 30px 30px 0 0; transform: translateY(110%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); z-index: 100; display: flex; flex-direction: column; box-shadow: 0 -10px 40px rgba(0,0,0,0.1); }
+.bottom-sheet.active { transform: translateY(0); }
+.sheet-header { padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;}
+.close-btn { background: #f0f0f0; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+.sheet-content { padding: 0 20px 20px; overflow-y: auto; flex-grow: 1; }
+
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 101; backdrop-filter: blur(5px); }
+.modal-overlay.active { display: flex; animation: fadeIn 0.2s; }
+.modal-box { width: 80%; text-align: center; background: white; padding: 20px; border-radius: 20px; animation: popIn 0.2s;}
+@keyframes popIn { from{transform: scale(0.9);} to{transform: scale(1);} }
+
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.simple-list, .toggle-list, .check-list { list-style: none; padding: 0; margin: 0; }
+.simple-list li, .toggle-list li, .check-list li { padding: 15px 0; border-bottom: 1px solid #f5f5f5; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 1rem; cursor: pointer; }
+.check-list li { justify-content: flex-start; gap: 15px; }
+.check-list li.done { opacity: 0.5; text-decoration: line-through; }
+.check-circle { width: 24px; height: 24px; border: 2px solid #ddd; border-radius: 50%; }
+.check-list li.done .check-circle { background: var(--primary); border-color: var(--primary); }
+
+.ios-switch { position: relative; display: inline-block; width: 50px; height: 30px; }
+.ios-switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e4e4e4; transition: .4s; border-radius: 34px; }
+.slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+input:checked + .slider { background-color: var(--primary); }
+input:checked + .slider:before { transform: translateX(20px); }
+
+.backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: opacity 0.3s; z-index: 90; }
+.backdrop.active { opacity: 1; pointer-events: auto; }
+
+.hidden { display: none !important; }
+.hint-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin: 15px 0; }
