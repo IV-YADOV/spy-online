@@ -11,10 +11,28 @@
     --font-main: 'Manrope', -apple-system, sans-serif;
 }
 
+/* ВАЖНО: html тоже должен быть 100% */
+html {
+    height: 100%;
+    margin: 0; padding: 0;
+}
+
 body {
     margin: 0; font-family: var(--font-main);
     background: var(--bg-color); color: var(--text-main);
-    height: 100vh; overflow: hidden;
+    
+    /* --- ФИКС ДЛЯ МОБИЛЬНЫХ БЕЗ DVH --- */
+    /* position: fixed привязывает body к краям ВИДИМОЙ области экрана. */
+    /* Это не дает адресной строке перекрывать контент. */
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    right: 0; 
+    bottom: 0; /* Привязка к низу */
+    width: 100%;
+    height: 100%; /* Заполняем зафиксированную область */
+    
+    overflow: hidden; /* Запрещаем скролл самого body */
     display: flex; justify-content: center;
 }
 
@@ -58,22 +76,42 @@ body {
         backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
         box-shadow: 0 40px 80px rgba(0,0,0,0.1), inset 0 0 0 1px rgba(255,255,255,0.4);
         overflow: hidden;
+        padding-bottom: 0 !important;
     }
 }
 @media (max-width: 767px) {
     .app-container { width: 100%; height: 100%; background: transparent; }
 }
 
-.app-container { position: relative; display: flex; flex-direction: column; }
+.app-container { 
+    position: relative; 
+    display: flex; 
+    flex-direction: column; 
+    /* safe-area-inset нужен для iPhone без кнопки Home */
+    padding-bottom: env(safe-area-inset-bottom);
+    box-sizing: border-box;
+    max-height: 100%;
+}
 
 /* Экраны */
 .screen {
-    display: none; flex-direction: column; height: 100%; padding: 20px; box-sizing: border-box;
+    display: none; 
+    flex-direction: column; 
+    height: 100%; /* Занимаем всю высоту контейнера */
+    padding: 20px; 
+    box-sizing: border-box;
     animation: fadeScale 0.3s ease;
-    overflow-y: auto; scrollbar-width: none; 
+    
+    /* ВКЛЮЧАЕМ СКРОЛЛ ЗДЕСЬ */
+    overflow-y: auto; 
+    overflow-x: hidden;
+    /* Важно для плавности на iOS */
+    -webkit-overflow-scrolling: touch; 
+    scrollbar-width: none; 
 }
 .screen::-webkit-scrollbar { display: none; }
 .screen.active { display: flex; }
+
 @keyframes fadeScale { from{opacity:0; transform:scale(0.98);} to{opacity:1; transform:scale(1);} }
 
 /* Элементы UI */
@@ -106,7 +144,7 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
     flex-shrink: 0;
 }
 .join-row { display: flex; gap: 10px; margin-top: 15px; margin-bottom: auto; flex-shrink: 0;}
-.small-input { padding-left: 0px; padding-right: 0px; margin: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
+.small-input { padding-left: 0; padding-right: 0; margin: 0; flex-grow: 1; display: flex; align-items: center; justify-content: center;}
 
 /* Лобби */
 .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-shrink: 0; }
@@ -130,7 +168,23 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 .control-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; }
 .label-box { display: flex; align-items: center; gap: 10px; font-weight: 600; }
 .value-control { display: flex; gap: 10px; background: rgba(0,0,0,0.05); padding: 4px; border-radius: 12px; }
-.value-control button { width: 32px; height: 32px; border: none; background: white; border-radius: 8px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+.value-control button {
+    width: 32px; height: 32px; 
+    border: none; background: white; 
+    border-radius: 8px; font-weight: 700; 
+    cursor: pointer; 
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    
+    /* --- ВАЖНЫЕ ИСПРАВЛЕНИЯ --- */
+    touch-action: manipulation; /* Отключает зум при двойном тапе */
+    user-select: none;          /* Запрещает выделение текста при быстрых кликах */
+    -webkit-tap-highlight-color: transparent; /* Убирает серую подсветку при клике */
+}
+/* Добавим эффект нажатия для тактильности */
+.value-control button:active {
+    transform: scale(0.9);
+    background: #f0f0f0;
+}
 .value-control span { width: 24px; text-align: center; line-height: 32px; font-weight: 700; }
 .divider { height: 1px; background: rgba(0,0,0,0.05); width: 100%; margin: 5px 0; }
 
@@ -184,26 +238,19 @@ input { border: none; background: transparent; font-size: 1.1rem; width: 100%; o
 .result-box { text-align: left; }
 .res-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 1.1rem; }
 
-/* Шторки (ИСПРАВЛЕНО) */
+/* Шторки */
 .bottom-sheet { 
     position: absolute; bottom: 0; left: 0; width: 100%; height: 75%; 
     background: #fff; border-radius: 30px 30px 0 0; 
     transform: translateY(110%); 
-    /* ВАЖНО: Скрываем элемент полностью, когда он не активен */
-    visibility: hidden; 
-    pointer-events: none;
-    z-index: 100; 
-    display: flex; flex-direction: column; 
+    visibility: hidden; pointer-events: none;
+    z-index: 100; display: flex; flex-direction: column; 
     box-shadow: 0 -10px 40px rgba(0,0,0,0.1); 
-    /* Анимация: сначала трансформ, потом видимость с задержкой при закрытии */
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0.3s;
 }
 
 .bottom-sheet.active { 
-    transform: translateY(0); 
-    visibility: visible;
-    pointer-events: auto;
-    /* При открытии видимость включается сразу */
+    transform: translateY(0); visibility: visible; pointer-events: auto;
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), visibility 0s 0s;
 }
 

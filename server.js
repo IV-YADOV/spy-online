@@ -16,18 +16,17 @@ const ALL_LOCATIONS = [
     "Космическая станция", "Океанский лайнер", "Подводная лодка", "Стройка"
 ];
 
-// Красивые градиенты для аватарок
 const AVATAR_COLORS = [
-    'linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%)', // Pink
-    'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)', // Purple
-    'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', // Aqua
-    'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)', // Orange-Purple
-    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', // Blue-Violet
-    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', // Red-Pink
-    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)', // Deep Blue
-    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)', // Green
-    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)', // Orange-Red
-    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Deep Purple
+    'linear-gradient(135deg, #FF9A9E 0%, #FECFEF 100%)',
+    'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
+    'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+    'linear-gradient(135deg, #fccb90 0%, #d57eeb 100%)',
+    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+    'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+    'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+    'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+    'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+    'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
 ];
 
 const rooms = {};
@@ -52,7 +51,7 @@ io.on('connection', (socket) => {
                     allLocations: ALL_LOCATIONS 
                 });
 
-                if (room.status === 'playing') {
+                if (room.status === 'playing' && room.gameData) {
                     const isSpy = room.gameData.spiesIds.includes(socket.id) || room.gameData.spiesUids.includes(uid);
                     if (isSpy && !room.gameData.spiesIds.includes(socket.id)) room.gameData.spiesIds.push(socket.id);
 
@@ -77,7 +76,6 @@ io.on('connection', (socket) => {
                         }
                     }
                 }
-                
                 io.to(roomCode).emit('updatePlayers', room.players);
                 return;
             }
@@ -88,16 +86,15 @@ io.on('connection', (socket) => {
     // --- CREATE ---
     socket.on('createGame', ({ playerName, uid }) => {
         const roomCode = generateRoomCode();
-        // Выбираем случайный цвет или первый
         const color = AVATAR_COLORS[0];
-        
         rooms[roomCode] = {
             hostId: socket.id,
             players: [{ id: socket.id, uid, name: playerName, isHost: true, avatarColor: color }],
             status: 'lobby',
             settings: { time: 5, spies: 1, activeLocations: [...ALL_LOCATIONS] },
             vote: null,
-            gameData: null
+            gameData: null,
+            timerInterval: null
         };
         socket.join(roomCode);
         socket.emit('joined', { roomCode, isHost: true, settings: rooms[roomCode].settings, allLocations: ALL_LOCATIONS });
@@ -114,14 +111,11 @@ io.on('connection', (socket) => {
                 existing.name = playerName;
                 socket.join(roomCode);
             } else {
-                // Присваиваем цвет по кругу
                 const colorIndex = room.players.length % AVATAR_COLORS.length;
                 const color = AVATAR_COLORS[colorIndex];
-                
                 room.players.push({ id: socket.id, uid, name: playerName, isHost: false, avatarColor: color });
                 socket.join(roomCode);
             }
-            
             socket.emit('joined', { roomCode, isHost: false, settings: room.settings, allLocations: ALL_LOCATIONS });
             io.to(roomCode).emit('updatePlayers', room.players);
         } else {
@@ -140,8 +134,10 @@ io.on('connection', (socket) => {
                 socket.leave(roomCode);
                 
                 if (room.players.length === 0) {
+                    clearInterval(room.timerInterval);
                     delete rooms[roomCode];
                 } else if (room.hostId === socket.id) {
+                     clearInterval(room.timerInterval);
                      io.to(roomCode).emit('error', 'Хост покинул игру. Комната закрыта.');
                      delete rooms[roomCode];
                 }
@@ -176,6 +172,8 @@ io.on('connection', (socket) => {
     socket.on('startGame', (roomCode) => {
         const room = rooms[roomCode];
         if (!room || room.hostId !== socket.id) return;
+        // Защита от повторного старта
+        if (room.status === 'playing') return;
 
         const location = room.settings.activeLocations[Math.floor(Math.random() * room.settings.activeLocations.length)];
         const playersCount = room.players.length;
@@ -212,6 +210,10 @@ io.on('connection', (socket) => {
 
         clearInterval(room.timerInterval);
         room.timerInterval = setInterval(() => {
+            if (!room.gameData) {
+                clearInterval(room.timerInterval);
+                return;
+            }
             room.gameData.duration--;
             if (room.gameData.duration <= 0) {
                 finishGame(roomCode, 'spies', 'Время истекло! Шпион победил.');
@@ -219,11 +221,13 @@ io.on('connection', (socket) => {
         }, 1000);
     });
 
-    // --- GAMEPLAY ---
+    // --- GUESS ---
     socket.on('spyGuess', ({ roomCode, location }) => {
         const room = rooms[roomCode];
+        // ВАЖНАЯ ПРОВЕРКА: Если игра уже не идет, ничего не делаем
         if (!room || room.status !== 'playing') return;
-        if (!room.gameData.spiesIds.includes(socket.id)) return;
+        
+        if (!room.gameData || !room.gameData.spiesIds.includes(socket.id)) return;
 
         if (location === room.gameData.location) {
             finishGame(roomCode, 'spies', `Шпион угадал локацию: ${location}`);
@@ -232,6 +236,7 @@ io.on('connection', (socket) => {
         }
     });
 
+    // --- VOTE ---
     socket.on('startVote', ({ roomCode, targetId }) => {
         const room = rooms[roomCode];
         if (!room || room.status !== 'playing' || room.vote) return;
@@ -246,7 +251,9 @@ io.on('connection', (socket) => {
 
     socket.on('submitVote', ({ roomCode, vote }) => {
         const room = rooms[roomCode];
-        if (!room || !room.vote) return;
+        // Если игра уже закончилась (status !== 'playing'), голос игнорируется
+        if (!room || room.status !== 'playing' || !room.vote) return;
+        
         if (socket.id === room.vote.targetId) return;
 
         room.vote.votes[socket.id] = vote;
@@ -259,33 +266,49 @@ io.on('connection', (socket) => {
         const votesYes = Object.values(room.vote.votes).filter(v => v === true).length;
 
         if (votesYes === votersCount) {
-            const isSpy = room.gameData.spiesIds.includes(room.vote.targetId);
+            const isSpy = room.gameData && room.gameData.spiesIds.includes(room.vote.targetId);
             const targetName = room.players.find(p => p.id === room.vote.targetId).name;
             finishGame(roomCode, isSpy ? 'civilians' : 'spies', isSpy ? `Пойман шпион: ${targetName}` : `Ошибка! ${targetName} мирный.`);
             room.vote = null;
         }
     });
 
+    // --- FINISH ---
     function finishGame(roomCode, winner, reason) {
         const room = rooms[roomCode];
-        if (!room) return;
-        clearInterval(room.timerInterval);
+        
+        // --- ГЛАВНОЕ ИСПРАВЛЕНИЕ ---
+        // Если комната не найдена ИЛИ игра уже закончилась (status уже 'results' или 'lobby')
+        // То мы выходим и не отправляем повторный Game Over
+        if (!room || room.status !== 'playing') return;
+        
+        // Сразу меняем статус, чтобы заблокировать другие вызовы
         room.status = 'results';
-        const spiesNames = room.players.filter(p => room.gameData.spiesIds.includes(p.id)).map(p => p.name).join(', ');
-        io.to(roomCode).emit('gameOver', { winner, reason, location: room.gameData.location, spiesNames });
+        
+        clearInterval(room.timerInterval);
+        
+        let spiesNames = "Никто";
+        if(room.gameData) {
+            spiesNames = room.players.filter(p => room.gameData.spiesIds.includes(p.id)).map(p => p.name).join(', ');
+        }
+        
+        const loc = room.gameData ? room.gameData.location : "Неизвестно";
+        
+        io.to(roomCode).emit('gameOver', { winner, reason, location: loc, spiesNames });
     }
 
     socket.on('returnToLobby', (roomCode) => {
         const room = rooms[roomCode];
         if (room && room.hostId === socket.id) {
-            room.status = 'lobby'; room.vote = null; room.gameData = null;
+            clearInterval(room.timerInterval);
+            room.status = 'lobby'; 
+            room.vote = null; 
+            room.gameData = null;
             io.to(roomCode).emit('returnToLobby');
         }
     });
 
-    socket.on('disconnect', () => {
-        // Ждем реконнекта
-    });
+    socket.on('disconnect', () => {});
 });
 
 server.listen(3000, () => {

@@ -58,6 +58,8 @@ function closeConfirmPopup() {
 function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
+    // Сброс скролла в начало при переходе
+    screens[name].scrollTop = 0;
 }
 
 // --- SETUP ---
@@ -95,12 +97,29 @@ function getUid() {
 // --- CONTROLS ---
 function changeSetting(key, delta) {
     if (!isHost) return;
+    
     const el = document.getElementById(`val-${key}`);
-    let val = parseInt(el.innerText) + delta;
-    if (val < 1) val = 1;
-    if (key === 'spies' && val > 3) val = 3;
-    if (key === 'time' && val > 15) val = 15;
-    socket.emit('updateSettings', { roomCode: currentRoom, key, value: val });
+    let val = parseInt(el.innerText);
+    
+    // 1. Вычисляем новое значение локально
+    let newVal = val + delta;
+    
+    // 2. Проверяем лимиты локально (чтобы цифры не скакали)
+    if (newVal < 1) newVal = 1;
+    if (key === 'spies') {
+        if (newVal > 3) newVal = 3; // Максимум 3 шпиона
+        // Нельзя сделать шпионов больше, чем игроков (примерная проверка)
+        // Точную проверку сделает сервер, но для UI ограничим пока так
+    }
+    if (key === 'time') {
+        if (newVal > 15) newVal = 15; // Максимум 15 минут
+    }
+
+    // 3. МГНОВЕННО обновляем интерфейс (Оптимистичный UI)
+    el.innerText = newVal; 
+    
+    // 4. Отправляем на сервер "в фоне"
+    socket.emit('updateSettings', { roomCode: currentRoom, key, value: newVal });
 }
 
 function toggleLocationFilter(loc) {
