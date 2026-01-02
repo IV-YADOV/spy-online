@@ -285,3 +285,28 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .hidden { display: none !important; }
 .hint-text { font-size: 0.85rem; color: var(--text-muted); text-align: center; margin: 15px 0; }
+
+/* ... Ваш существующий CSS ... */
+
+/* --- ПОДПИСЬ --- */
+.footer-signature {
+    position: absolute;
+    bottom: 15px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    
+    color: var(--text-muted);
+    opacity: 0.5; /* Полупрозрачность для аккуратности */
+    
+    pointer-events: none; /* Пропускает клики сквозь текст */
+    z-index: 50; /* Поверх экранов, но под шторками */
+    
+    /* Учитываем отступ на iPhone без кнопки */
+    padding-bottom: env(safe-area-inset-bottom);
+}
